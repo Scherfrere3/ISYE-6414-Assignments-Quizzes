@@ -1,0 +1,552 @@
+---
+title: "Midterm Exam 1 - Open Book Section (R) - Part 2"
+output:
+  html_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instructions
+
+The R Markdown/Jupyter Notebook file includes the questions, the empty
+code chunk sections for your code, and the text blocks for your
+responses. Answer the questions below by completing the R
+Markdown/Jupyter Notebook file. You may make slight adjustments to get
+the file to knit/convert but otherwise keep the formatting the same.
+Once you've finished answering the questions, submit your responses in a
+single knitted file as *HTML* only.
+
+*Next Steps:*
+
+1.  Save the .Rmd/.ipnyb file in your R working directory - the same
+    directory where you will download the "home_energy_consumption.csv"
+    data file into. Having both files in the same directory will help in
+    reading the "home_energy_consumption.csv" file.
+
+2.  Read the question and create the R code necessary within the code
+    chunk section immediately below each question. Knitting this file
+    will generate the output and insert it into the section below the
+    code chunk.
+
+3.  Type your answer to the questions in the text block provided
+    immediately after the response prompt.
+
+4.  Once you've finished answering all questions, knit this file and
+    submit the knitted file *as HTML* on Canvas.
+
+    ```         
+    * Make sure to start submission of the exam at least 10 minutes before the end of the exam time. It is your responsibility to keep track of your time and submit before the time limit. 
+
+    * If you are unable to knit your file as HTML for whatever reason, you may upload your Rmd/ipynb/PDF/Word file instead. However, you will be penalized 10%.
+
+    * If you are unable to upload your exam file for whatever reason, you may IMMEDIATELY attach the file to the exam page as a comment via Grades-> Midterm Exam 1 - Open Book Section (R) - Part 2 -> Comment box. 
+
+    * Note that you will be penalized 10% (or more) if the submission is made within 5 minutes after the exam time has expired and a higher penalty if more than 5 minutes. Furthermore, you will receive zero points if the submission is made after 15 minutes of the exam time expiring. We will not allow later submissions or re-taking of the exam.
+
+    * If you upload your file after the exam closes, let the instructors know via a private Piazza post. Please DON'T attach the exam file via a private Piazza post to the instructors since you could compromise the exam process. Any submission received via Piazza will not be considered.
+
+    *#Commented out code will be graded for partial credit and the submitted file must be HTML
+    ```
+
+### Mock Example Question
+
+This will be the exam question - each question is already copied from
+Canvas and inserted into individual text blocks below. You do not need
+to copy/paste the questions from the online Canvas exam.
+
+```{r}
+# Example code chunk area. Enter your code below the comment
+
+```
+
+**Mock Response to Example Question**: This is the section where you
+type your written answers to the question.
+
+**Ready? Let's begin.**
+
+## Background
+
+In this exam, you will be considering various attributes to predict the
+monthly energy consumption of a household.
+
+The dataset contains the following variables:
+
+1.  **Household Size**: The number of people living in the household.
+    **(Quantitative variable)**
+
+2.  **Home Size**: The size of the home in square feet. **(Quantitative
+    variable)**
+
+3.  **Number of Rooms**: The total number of rooms in the home.
+    **(Quantitative variable)**
+
+4.  **Household Income**: The household's annual income in US dollars.
+    **(Quantitative variable)**
+
+5.  **Type of Home**: The classification of the home, such as "Detached
+    house," "Townhouse," or "Semi-detached house." **(Qualitative
+    variable)**
+
+6.  **Heating System Type**: The type of heating system used in the
+    home, such as "Solar" or "Gas." **(Qualitative variable)**
+
+7.  **Cooling System Type**: The type of cooling system used in the
+    home, such as "Window units," "Central AC," or "None."
+    **(Qualitative variable)**
+
+8.  **Insulation Quality**: A rating (from 1 to 5) of the quality of the
+    home's insulation, with 5 being the best quality. **(Quantitative
+    variable)**
+
+9.  **Ownership Status**: Whether the household owns or rents the home
+    (e.g., "Owner" or "Renter").
+
+10. **Work from Home Frequency**: The number of days per week that
+    household members work from home. **(Quantitative variable)**
+
+11. **Smart Home Devices**: Indicates whether the household has smart
+    home devices installed ("Yes" or "No"). **(Qualitative variable)**
+
+12. **Solar Panel Installation**: Indicates whether the home has solar
+    panels installed ("Yes" or "No"). **(Qualitative variable)**
+
+13. **Monthly Energy Consumption** : The household's monthly energy
+    consumption in kilowatt-hours (kWh) **(Response variable)**
+
+```{r}
+#read the csv file
+set.seed(100)
+#this seed has been set to 100 to ensure results are reproducible. DO NOT CHANGE THIS SEED
+energy_consumption = read.csv("home_energy_consumption.csv",header=TRUE)
+
+energy_consumption$Type_of_Home=as.factor(energy_consumption$Type_of_Home)
+energy_consumption$Heating_System_Type=as.factor(energy_consumption$Heating_System_Type)
+energy_consumption$Cooling_System_Type=as.factor(energy_consumption$Cooling_System_Type)
+energy_consumption$Ownership_Status=as.factor(energy_consumption$Ownership_Status)
+energy_consumption$Smart_Home_Devices=as.factor(energy_consumption$Smart_Home_Devices)
+energy_consumption$Solar_Panel_Installation=as.factor(energy_consumption$Solar_Panel_Installation)
+
+#Dividing the dataset into training and testing datasets
+testRows = sample(nrow(energy_consumption),0.2*nrow(energy_consumption))
+testData = energy_consumption[testRows, ]
+trainData = energy_consumption[-testRows, ]
+row.names(trainData) <- NULL
+head(trainData) #display train data
+
+```
+
+## Question 1: Data Exploration (11 points)
+
+**Use the full dataset "energy_consumption" for this question**
+
+**1a) (3 points) Calculate average monthly energy consumption by type of
+home. Which type of house shows the highest average monthly energy
+consumption?**
+
+```{r}
+
+library(lubridate)
+library(dplyr)
+
+average_monthly_consumption = energy_consumption %>%
+  group_by(Type_of_Home) %>%
+  summarize(AVG_energy_monthly_consumption = mean(Monthly_Energy_Consumption))
+
+print(average_monthly_consumption)
+
+```
+
+**Answer to Question 1a:**
+"Detached house" shows the highest monthly energy consumption at 722.1961.
+
+
+**1b) (3 points) Provide a boxplot showing the distribution of monthly
+energy consumption across different types of heating systems? Explain
+your interpretation of the plot.**
+
+```{r}
+#Code
+library(ggplot2)
+ggplot(energy_consumption, aes(x=Heating_System_Type, y =Monthly_Energy_Consumption)) + geom_boxplot(fill = "lightblue", color = "black") +
+  labs(title = "Distribution of monthly energy consumption by heating system type", x= "heating sytem type", y= "monthly energy consumption(kwh)")
+theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+**Answer to Question 1b:**
+The boxplot visually represent the distribution of monthly energy consumption across different types of heating systems. We can see based oon the boxplot, electric has the highest avg use and all sysytem type have outliers excpect folr Gas and solar. 
+
+**1c) (5 points) Create scatterplots of the response variable against
+the following predictors:**
+
+**a) Household size b) Household income c) Work from home frequency**
+
+**i)Describe the general trend of each plot?**
+
+```{r}
+ggplot(energy_consumption, aes( x = Household_Size + Work_from_Home_Frequency + Household_Income, y =Monthly_Energy_Consumption)) + geom_point(color = "blue") + labs(title = "monthly energy consumption vs household size", x= "household size", y ="energy consumption - kwh ") +theme_classic()
+
+```
+
+**Answer to Q1c(i)**
+THERE IS A CONSISTENT TREND IN THE SCATTER PLOT AS THE DATA POINTS ARE SATURATED IN THE MIDDLE WHERE X RANGES FROM (50000 < X < 90000) . THE LARGER THE HOME SIZE, THE MORE ENERGY CONSUMED.  AS FOR THE BOXPLOT FOR ENERGY TYPE, THE TREND IS PRETTY STEADY W/ THE MAJORITY OF DATA POINTS RANGING FROM 550 - 800 KWH.
+
+**ii)Calculate the correlation coefficient between the response variable
+and**
+
+**a) Household size b) Household income c) Work from home frequency.**
+
+**Interpret the correlation coefficient of each of the predictors with
+the response variable. Use the following ranges while interpreting the
+correlation coefficients.**
+
+-   **0.7 to 0.9** (or **-0.7 to -0.9**): Strong positive (or negative)
+    correlation.
+
+-   **0.5 to 0.7** (or **-0.5 to -0.7**): Moderate positive (or
+    negative) correlation.
+
+-   **0.3 to 0.5** (or **-0.3 to -0.5**): Weak positive (or negative)
+    correlation.
+
+-   **0 to 0.3** (or **0 to -0.3**): Very weak or no linear correlation.
+
+```{r}
+# Your code here...
+
+DATAFORCORRELATION = energy_consumption %>% 
+  select(Household_Size, Household_Income, Work_from_Home_Frequency, Monthly_Energy_Consumption)
+
+CorrelationMATRIX = cor(DATAFORCORRELATION)
+
+corcoefficients = CorrelationMATRIX["Monthly_Energy_Consumption", c("Household_Size","Household_Income","Work_from_Home_Frequency")]
+corcoefficients
+
+
+
+```
+
+**Answer to question 1c (ii)**
+Household_size has a correlation coefficient of 0.39340245 so Weak positive correlation.
+
+Household_Income has a correlation coefficient of 0.01571641 so Very weak or no linear correlation.
+
+Work_from_Home_Frequency has a correlation coefficient of -0.01705469 so Very weak or no linear correlation.
+
+
+## Question 2: Multiple Regression Model (17 points)
+
+**2a)(6 points)**
+
+**i)** **Using the dataset “trainData”, change the baseline for
+Heating_System_Type to "Solar". Use this baseline for all the models
+created in the exam**
+
+```{r}
+trainData$Heating_System_Type = relevel(factor(trainData$Heating_System_Type), ref = "Solar")
+
+```
+
+**ii) Using the dataset "trainData", perform a multiple linear
+regression to predict the monthly energy consumption using the
+predicting variables "Number_of_Rooms" and "Heating_System_Type". Call
+it model1. Display the summary.**
+
+```{r}
+model1 = lm(Monthly_Energy_Consumption ~ Number_of_Rooms + Heating_System_Type, data = trainData)
+summary(model1)
+
+residualdgfreedom = df.residual(model1)
+print(residualdgfreedom)
+```
+
+**iii) How many model parameters are there?**
+
+**Answer to Q2a(iii)**
+There are 5 model parameter listed as "Number_of_Rooms, Heating_System_TypeElectric, Heating_System_TypeGas, Heating_System_TypeOil, and Heating_System_TypeOther"
+
+**iv) Interpret the coefficient for the "Heating_System_TypeElectric" in
+the context of the problem. State any assumptions while interpreting the
+coefficient.**
+
+**Answer to Q2a(iv)**
+The coefficient for heating systems electric shows the average change in monthly energy consumption when the heating system is electric compared to the baseline, which is solar. The relationship observed is solely due to the type of heating system.
+
+**v)***How many residual degrees of freedom are there, and how are they calculated?**
+
+**Answer to Q2a(v)**
+THERE ARE 794 RESIDUAL DEGREES OF FREEDOM AND THEY CAN BE CALCULATED BY USING THE df.residual function i used, looking at the last row on the model or total number of observations minus number of parameters in the model.
+
+**2b)(8 points) Create a full linear regression model using all the
+predictors in the dataset "trainData" .Call it model2. Display the
+summary.**
+
+```{r}
+model2 = lm(Monthly_Energy_Consumption ~ ., data = trainData)
+summary(model2)
+```
+
+**i) What is the estimate of the error variance? Is it different than
+model1, if yes why?**
+
+**Answer to Q2b(i)**
+The estimate of the error variance is 56.51 on model 2. On model one it is 137.5. It is different than model 1 because model 1 has less parameters compared to model 2 therefore model 2 error variance is much smaller than model 1
+
+**ii) Interpret the coefficient corresponding to "Household_Size" in the
+context of the problem. State any assumptions while interpreting the
+coefficient.**
+
+**Answer to Q2b(ii)**
+The coefficient for household size shows the average change in monthly energy consumption for each additional person in the household, assuming all other factors remain constant. The assumption is that household size does NOT have a direct effect on energy consumption and energy consumption is linear + additive.
+
+**iii) Compare the R-squared and Adjusted R-squared values of the
+reduced and full models (model1 and model2). What do you observe?
+Explain the theoretical differences between R-squared and Adjusted
+R-squared. What does each measure?**
+
+Model one has an R squared value of 0.01965057 and an adjusted R squared value of 0.01347708 wow model two has an are squared value of 0.8373805 and an adjusted R square of 0.8334192.
+
+R squared and adjusted R squared values between model 1 and model 2 different drastically R squared indicates the proportion of variance in the response variable that can be explained by the predictor variables and adjusted R squared adjust for the number of predictors, providing an accurate measure when comparing models with different numbers of predictors :)
+**Answer to Q2b(iii)**
+
+**iv) Which coefficients in model2 are statistically insignificant at an
+alpha level of 0.01? Should we remove those coefficients from our model?
+Explain with reasoning.**
+
+```{r}
+summary(model2)$coefficients
+
+
+```
+
+**Response to Q2b (iv)**
+
+Number_of_Rooms, Household_Income, Type_of_HomeSemi-detached house,Type_of_HomeTownhouse, Heating_System_TypeElectric,, vHeating_System_TypeOil, Heating_System_TypeOther, Ownership_StatusRenter,Work_from_Home_Frequency, Smart_Home_DevicesYes, and Solar_Panel_Installation are all the coefficients with P values greater t damn brohan 0.01 and are therefore considered statistically insignificance, removing them can help prevent over fitting
+
+**2c) (3 points) Compare model1 and model2 using a partial F-test using
+an alpha level of 0.01?**
+
+**State your conclusion based on the test.**
+
+```{r}
+anova(model1, model2)
+```
+
+**Answer to Question 2c:**
+Based on the test model two has an F value of 280.16 and a P value significantly less than 0.01, therefore we reject the no hypothesis which means that the additional predictors and model two actually help improve the fit of the model
+
+## Question 3: Model Diagnostics (11 points)
+
+**3a) (4 points) Perform the following model diagnostics on *model2*
+(the full model).**
+
+**i) Check for constant variance.**
+
+**ii) Check for normality. (Both QQplot and histogram are required to
+check this assumption). For the QQplot, 95% confidence envelope should
+be plotted.**
+
+**Explain your findings based on the diagnostic plots.**
+
+```{r}
+plot(model2$fitted.values, model2$residuals)
+abline(h=0, col = "red")
+
+```
+
+```{r}
+#normality
+pop = model2$residuals 
+qqnorm(pop)
+qqline(pop, col = "red")
+
+hist(pop, main = "histogram of residuals for model 2 ", xlab = "residuals", breaks = 30)
+```
+
+**Answer to Question 3a:**
+
+Based on the plots, the scatterplot of residuals versus fitted values shows no clear pattern, and it is  randomly scattered which implies heteroskedacity. The QQ plot shows points close to the reference line which means that the residuals are normally distributed.
+
+**3b) (7 points)** **Create a linear regression model named model3 that
+uses the log-transformed response variable. Include all predictors from
+the dataset trainData, and add an interaction term by multiplying the
+predictors: Household Size, Home Size, and Number of Rooms.**
+
+**Tip: Interaction term = Household Size\* Home Size \* Number of
+Rooms**
+
+```{r}
+trainData$interactionterm = trainData$Household_Size *trainData$Home_Size * trainData$Number_of_Rooms
+model3 = lm(log(Monthly_Energy_Consumption) ~ . + interactionterm, data= trainData)
+summary(model3)
+```
+
+**i) Is the interaction term statistically significant at an alpha level
+of 0.01?**
+
+**Answer to Q3b(i)**
+Yes, since the P value is 0.00598 for the interaction term it is statistically significant. 
+
+**ii) Compare the R-squared and adjusted R-squared values of model2 and
+model3?**
+
+**Answer to Q3b(ii)**
+Model 3 has an adjusted R squared of 0.8128 while model 2 has an adjusted R squared of 0.8334192 since model 2 has a higher adjusted R squared value than model 3, I do not believe the log transformation and interaction term improves the model fit.
+
+
+**iii) Perform the same model diagnostics (constant variance and
+normality assumption) on model3 as performed in Q3a on model2. Explain ways we can deal with constant variance and normality assumption in a model if they do not hold.**
+
+```{r}
+#Code
+residualsmodel3 = model3$residuals
+
+#qqplot
+qqnorm(residualsmodel3, main = "qqplot of residuals for model 3")
+qqline(residualsmodel3, col = "red")
+
+z = qnorm(0.975)
+qqplotmodel3 = qqnorm(residualsmodel3, plot.it = FALSE)
+LOWERMODEL3 = qqplotmodel3$x + z * sd(residualsmodel3) 
+UPPERMODEL3 = qqplotmodel3$x - z * sd(residualsmodel3) 
+lines(qqplotmodel3$x, LOWERMODEL3, col = "blue", lty = 2)
+lines(qqplotmodel3$x, UPPERMODEL3, col = "blue", lty = 2)
+
+hist(residualsmodel3, main= "histogram of residuals model 3", xlab = "residuals", breaks = 30)
+```
+
+**Response to Question 3b (iii):**
+If constant variance in normality assumptions, don't hold, we can use transformations to level variance and improve normality or  add or remove predictors according to their significance.
+
+## Question 4: Multicollinearity and outliers. (12 points)
+
+**4a) (2 points) Diagnose multicollinearity in *model2* created in
+Question 2b by calculating the Variance Inflation Factor (VIF) for each
+predictor. Based on the calculated VIF values, is multicollinearity a
+concern?**
+
+```{r}
+
+library(car)
+vifvalues = vif(model2)
+print(vifvalues)
+```
+
+**Answer to Question 4a:**
+Based on the output, there are no multicollinearity issues. If there were multicollinearity issues, then we may need to remove variables.
+
+**4b) (3 points) Use the Cook’s distance to count outliers in the data
+based on *model2*.**
+
+**i) Plot the Cook's distance for each observation.**
+
+**ii)Using the threshold 4/n, state clearly the number of outliers.**
+
+```{r}
+cooksdistance = cooks.distance(model2)
+
+plot(cooksdistance, main = "CD for model2" , ylab = "CD", type = "h", col = "blue")
+abline(h=4/length(cooksdistance), col = "red")
+
+nn = length(cooksdistance)
+threshold = 4/nn
+amountofoutliers = sum(cooksdistance > threshold)
+print(amountofoutliers)
+```
+
+**4c) (7 points) Remove the outliers (indicated in 4b) from the dataset
+"trainData". Create a linear regression model, using the dataset without
+the outliers. Use all the predictors. Call it model4.**
+
+```{r}
+traindatanooutliers = trainData[cooksdistance <= threshold, ]
+model4 = lm(Monthly_Energy_Consumption ~., data = traindatanooutliers)
+
+rsquaredmodel4 = summary(model4)$r.squared
+adjrsquaredmodel4 = summary(model4)$adj.r.squared
+
+rsquaredmodel4
+adjrsquaredmodel4
+
+
+```
+
+**i) Compare the R-squared and adjusted R-squared values of model4 and
+model2. Which model performed better?**
+
+
+
+**Answer to Q4c(i)**
+Model four has a R squared value of 0.8771671 and an adjusted R squared value of 0.8738018 while model 2 has a R squared value of 0.8373805 and an adjusted R square value of 0.8334192. Based off of these R squared values there is no significant change therefore there is not a significant effect on model performance because of the removal of outliers.
+
+
+
+**ii)** **How does the presence or absence of these outliers affect the
+model’s regression coefficients? Do you observe any significant changes?
+Explain**
+
+**Answer to Q4c(ii)**
+Outliers can lead to false misunderstandings or bias estimates comparing the fit of model two and model four can help us understand the effect the outliers have on this data set. 
+
+
+**iii)** **What is the sampling distribution of the estimated regression
+coefficient corresponding to "Number of Rooms" in model4?**
+
+**Answer to Q4c(iii)**
+-0.03482217 is the sampling distribution of the estimated regression coefficient corresponding to number of rooms and model 4
+
+**iv) Is this estimated coefficient of "Number of Rooms" statistically
+significant at an alpha level of 0.01 in model4?**
+
+**Answer to Q4c(iv)**
+No, the estimated coefficient of a number of rooms is not statistically significant because it has a P value of 0.97983936 which is much larger than the alpha level of 0.01.
+
+## Question 5: Prediction (9 points)
+
+**Note: Use "testData" for all questions in Q5**
+
+**5a)(6 points) Using testData, predict the monthly energy consumption
+for each of the models below:**
+
+**i) model2 (question 2b)**
+
+**ii) model3 (question 3b)**
+
+**iii) model4 (question 4c)**
+
+**Calculate the precision measure for predictions of all the models.
+Which model performed the best according to precision measure? Why do we
+focus on the precision measure?**
+
+```{r}
+Predictionsmodel2 = predict(model2, newdata = testData)
+
+
+maemodel2 = mean(abs(testData$Monthly_Energy_Consumption - Predictionsmodel2))
+
+
+print(paste("MAE FOR MODEL 2:", maemodel2))
+
+
+```
+
+**Response to Q5a**
+
+**Q5b) (3 points) Extract the first row of testData. Using model2, what
+is the 99% prediction interval (PI) of the monthly consumption of energy
+(kWh)? Provide an interpretation of your results.**
+
+```{r}
+FIRSTROW = testData[1,]
+prediction = predict(model2, newdata = FIRSTROW, interval = "prediction", level = 0.99)
+print(prediction)
+```
+
+**Response to Q5b**
+Based on the model, we can be 99% confident that the actual monthly energy consumption will fall between 705.1696 kWh and 1000.787 kWh
+**End of exam**
